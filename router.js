@@ -19,17 +19,17 @@ AmorphicRouter =
         this.controller = controller;
         options = options || {};
         var self = this;
-        this.route = function () {
+        this._route = function () {
             self._goTo(self.route);
         }
 
-        this._parseRoute(this.route, routeIn, {}, '', '');
+        this._parseRoute(this._route, routeIn, {}, '', '');
 
         // Check regularly to see if path appears in location.href
         var self = this;
         setInterval(function () {self._checkURL()}, options.interval || 500);
 
-        return this.route;
+        return this._route;
     },
 
     /**
