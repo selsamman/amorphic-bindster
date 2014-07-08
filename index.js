@@ -696,7 +696,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                         }
                         else if (node.tagName == 'INPUT' && node.type.toLowerCase() == 'radio')
                         {
-                            this.addEvent(tags, 'onclick', 'if (target.checked) { ' + tags.bind +  ' = ' + tags.truevalue + '}');
+                            this.addEvent(tags, 'onclick', 'if (target.checked) { ' + this.getBindAction(tags,   tags.truevalue) + '}');
                             this.validateValue(tags, node.checked);
                             if (!bind_error && last_value != bind_data)
                             {
