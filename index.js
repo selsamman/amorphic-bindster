@@ -473,10 +473,16 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
 
                 // Iterate
                 var bypass = false;
-                if (tags.iterateon && !iterating_entity && !skip)
+                var iterateon = tags.iterateon;
+                if (iterateon && !iterating_entity && !skip)
                 {
                     do_render = false;
-                    var fill_data = this.get(this.getPropOrGetter(tags.iterateon));
+                    var fill_data = this.get(this.getPropOrGetter(iterateon));
+                    if (!(fill_data instanceof Array) && tags.fill) {
+                        fill_data = this.getValueIterator(node, tags);
+                        iterateon += '__values__';
+                        with ({__value__: fill_data}) {eval (this.instance + ".data." + iterateon + "= __value__")};
+                    }
                     var nothing_rendered = true;
                     var previousNode;
                     // Render nodes adding more through cloning if needed
@@ -495,7 +501,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                             var new_context = (tags.iterateindex || tags.iteratewith) ?
                             context + (
                                 (tags.iteratewith ? this.instance + ".set('" + tags.iteratewith + "', \""
-                                    /*+ this.instance + ".data."*/ + tags.iterateon + "[" + ix + "]\");" :  "")
+                                    /*+ this.instance + ".data."*/ + iterateon + "[" + ix + "]\");" :  "")
                                 + (tags.iterateindex ? this.instance + ".set('" + tags.iterateindex + "', " + ix + ");" : "")
                                 + (tags.iterateloopindex ? this.instance + ".set('" + tags.iterateloopindex + "', " + loopIndex + ");" : "")
                                 + (tags.iteratecounter ? this.instance + ".set('" + tags.iteratecounter + "', " + counter + ");" : "")
@@ -589,57 +595,16 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                 // Process various tags
                                 if (tags.fill)
                                 {
-                                    var fill_data = this.eval(this.getPropOrGetter(tags.fill), null, "fill", node);
-                                    var fill_using = this.eval(tags.using, null, "using", node);
+                                    var fill_data = this.eval(this.getPropOrGetter(tags.fill, tags.bind, node), null, "fill", node);
+                                    var fill_using = this.eval(this.getPropOrGetter(tags.using, tags.bind, node), null, "using", node);
                                     if (!fill_data)
                                         this.throwError(node, 'fill', 'cannot get data to fill' + tags.fill);
                                     else
                                     {
-                                        // If an associative array (hash) create fill and using
-                                        var do_sort = false;
-                                        if (!(fill_data instanceof Array)) {
-                                            var fill_using = fill_data
-                                            fill_data = [];
-                                            for (key in fill_using)
-                                                fill_data.push(key);
-                                            do_sort = true;
-                                        }
-                                        // Run through filter functions
-                                        var keys = [];
-                                        var values = {};
-
-                                        for (var ix = 0; ix < fill_data.length; ++ix)
-                                        {
-                                            var key = tags.fillkey ?
-                                                this.eval(tags.fillkey, {index: ix, value: fill_data[ix]}, "fillkey", node)
-                                                : fill_data[ix];
-                                            if (key != null) {
-                                                var value = fill_using ? fill_using[key] : fill_data[ix];
-                                                value = tags.fillvalue ?
-                                                    this.eval(tags.fillvalue, {key: key, value: value, index: ix}, "fillvalue", node)
-                                                    : value;
-                                                if (value != null) {
-                                                    keys.push(key);
-                                                    values[key] = value;
-                                                }
-                                            }
-                                        }
-                                        if (do_sort && tags.sort !== 'none') {
-                                            var sortorder = tags.sortorder === 'desc' ? -1 : 1;
-                                            if (tags.sort === 'key') { //sort by key, not value
-                                                keys.sort(function(a, b) {return (a > b) ? sortorder : -sortorder});
-                                            }
-                                            else if (tags.sort === 'keynumber') { //sort by key, assuming keys are numbers and not strings
-                                                keys.sort(function(a, b) {return Number(a) > Number(b) ? sortorder : -sortorder});
-                                            }
-                                            else { //default - sort by value
-                                                keys.sort(function(a, b) {return values[a] > values[b] ? sortorder : -sortorder});
-                                            }
-                                        }
-                                        if (tags.nullselect) {
-                                            keys.splice(0, 0, "null");
-                                            values["null"] = tags.nullselect;
-                                        }
+                                        var kv = this.getSelectKeyValues(fill_data, fill_using, tags);
+                                        var keys = kv.keys;
+                                        var values = kv.values;
+                                        var materialize = false;
                                         if (node.tagName == 'SELECT')
                                         {
                                             do_render = false;
@@ -659,6 +624,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                                     child = child.nextSibling;
                                                     lastValue = value;
                                                     node.bindster.forceRefresh = true;
+                                                    materialize = true;
                                                 }
                                             }
                                             // Kill extra options
@@ -670,7 +636,17 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                                     var next_node = child.nextSibling;
                                                     node.removeChild(child)
                                                     child = next_node;
+                                                    materialize = true;
                                                 }
+                                            if (materialize && typeof($) == 'function') {
+                                                (function () {
+                                                  var select = $(node);
+                                                  select = select ? select[0] : null;
+                                                  select = select ? $(select) : null;
+                                                  if (select && typeof(select.material_select) == 'function')
+                                                    setTimeout(function (){select.material_select()}, 0);
+                                                })()
+                                            }
                                         }
                                     }
                                     processed_tags = true;
@@ -942,11 +918,13 @@ Bindster.prototype.resolveRadioValue = function (target, value)
     }
     return value;
 }
-Bindster.prototype.getPropOrGetter = function (bind_ref) {
+Bindster.prototype.getPropOrGetter = function (bind_ref, bind, node) {
     /* It would be nice to be able to substitute a getter but this would require some heavy duty processing
      *  this feature should probably come out or be done as a true getter */
     if (typeof(bind_ref) == 'string' && bind_ref.match(/[A-Za-z0-9_]$/) && !bind_ref.match(/[^A-Za-z0-9_\(\)\.\[\]]/))
         return "(typeof(" + bind_ref + "Get) == 'function' ? (" + bind_ref + "Get()) : (" + bind_ref + "))";
+    else if (bind && this.getBindObjectReference(bind) && typeof(bind_ref) == 'function')
+        return bind_ref.call(this.eval(this.getBindObjectReference(bind), null, "binderror", node));
     else
         return bind_ref
 }
@@ -965,6 +943,72 @@ Bindster.prototype.setAttr = function (selector, attr, value)
         value: value,
         regexp: this.createSelectorRegExp(selector)
     });
+}
+Bindster.prototype.getValueIterator = function (node, tags) {
+    var fill_data = this.eval(this.getPropOrGetter(tags.fill, tags.iterateon, node), null, "fill", node);
+    var fill_using = this.eval(this.getPropOrGetter(tags.using, tags.iterateon, node), null, "using", node);
+    if (!fill_data)
+        this.throwError(node, 'fill', 'cannot get data to fill' + tags.fill);
+    var kv = this.getSelectKeyValues(fill_data, fill_using, tags);
+    var keys = kv.keys;
+    var values = kv.values;
+    var iterator = [];
+    for (var ix = 0; ix < keys.length; ++ ix)
+        iterator.push({value: keys[ix], description: values[keys[ix]]});
+    return iterator;
+}
+Bindster.prototype.getSelectKeyValues = function (fill_data, fill_using, tags) {
+
+    // If an associative array (hash) create fill and using
+    var do_sort = false;
+
+    if (!(fill_data instanceof Array)) {
+        var fill_using = fill_data
+        fill_data = [];
+        for (key in fill_using)
+            fill_data.push(key);
+        do_sort = true;
+    }
+
+    // Run through filter functions
+    var keys = [];
+    var values = {};
+
+    for (var ix = 0; ix < fill_data.length; ++ix) {
+        var key = tags.fillkey ?
+          this.eval(tags.fillkey, {index: ix, value: fill_data[ix]}, "fillkey", node)
+          : fill_data[ix];
+        if (key != null) {
+            var value = fill_using ? fill_using[key] : fill_data[ix];
+            value = tags.fillvalue ?
+              this.eval(tags.fillvalue, {key: key, value: value, index: ix}, "fillvalue", node)
+              : value;
+            if (value != null) {
+                keys.push(key);
+                values[key] = value;
+            }
+        }
+    }
+
+    if (do_sort && tags.sort !== 'none') {
+        var sortorder = tags.sortorder === 'desc' ? -1 : 1;
+        if (tags.sort === 'key') { //sort by key, not value
+            keys.sort(function(a, b) {return (a > b) ? sortorder : -sortorder});
+        }
+        else if (tags.sort === 'keynumber') { //sort by key, assuming keys are numbers and not strings
+            keys.sort(function(a, b) {return Number(a) > Number(b) ? sortorder : -sortorder});
+        }
+        else { //default - sort by value
+            keys.sort(function(a, b) {return values[a] > values[b] ? sortorder : -sortorder});
+        }
+    }
+
+    if (tags.nullselect) {
+        keys.splice(0, 0, "null");
+        values["null"] = tags.nullselect;
+    }
+
+    return {keys: keys, values: values};
 }
 Bindster.prototype.convertValue = function(value)
 {
@@ -1061,6 +1105,17 @@ Bindster.prototype.getBindErrorReference = function(bind)
     else
         return "this.data." + this.bindster_error_prefix + bind;
 }
+Bindster.prototype.getBindObjectReference = function(bind)
+{
+    if (bind.match(/[^0-9a-zA-Z_$.\[\]\(\)]/))
+        return null;
+
+    if (bind.match(/(.*?)\.([^.]+)$/))
+        return RegExp.$1;
+    else
+        return "this.data";
+}
+
 Bindster.prototype.getBindErrorReferenceParts = function(bind)
 {
     if (bind.match(/[^0-9a-zA-Z_$.\[\]\(\)]/))
@@ -1475,7 +1530,7 @@ Bindster.prototype.getTags = function (node, mapAttrs, finger_print)
             attrs[(mapper ? "" : our_tag) + attrName] = attrValue .replace(/^ +/, '').replace(/ +$/, '');
 
             // For data binding see if we need to pick up additional attributes from the model
-            if ((attrName == 'bind' || attrName == 'evalbind') && !mapper)
+            if ((attrName == 'bind' || attrName == 'evalbind' || attrName == 'on') && !mapper)
             {
                 if (attrName == 'evalbind')
                     var pattrs = this.getPropAttrs(node, this.eval(attrValue, null, node, "evaluating evalbind="));
@@ -1483,9 +1538,10 @@ Bindster.prototype.getTags = function (node, mapAttrs, finger_print)
                     var pattrs = this.getPropAttrs(node, attrValue);
 
                 for (attr in pattrs)
-                    if (attr.match(/validate|format|parse|rule|type|values/))
+                    if (attr.match(/validate|format|parse|rule|type|values|descriptions/))
                         attrs[attr.match(/type/) ? 'proptype' : attr] =
-                            (attr == 'rule' || attr == 'type') ? pattrs[attr] : this.convertValue(pattrs[attr]);
+                            (attr == 'rule' || attr == 'type') ? pattrs[attr] :
+                              (attr.match(/values|descriptions/)? pattrs[attr] : this.convertValue(pattrs[attr]));
 
                 // Add to the fingerprint to allow selectors to match
                 finger_print += ("=" + (attrValue.match(/(.*?)\.([^.]+)$/) ? RegExp.$2 : attrValue) + ";");
