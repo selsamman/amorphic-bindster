@@ -6,6 +6,9 @@
   "dependencies": {
       "q": "1.x"
   },
+  "devDependencies": {
+    "supertype": "1.2.*"
+  },
   "directories": {},
   "main": "./index.js",
   "engines": {
