@@ -1010,17 +1010,17 @@ Bindster.prototype.getSelectKeyValues = function (fill_data, fill_using, tags) {
 
     return {keys: keys, values: values};
 }
-Bindster.prototype.convertValue = function(value)
+Bindster.prototype.convertValue = function(value, obj, args)
 {
     if (value instanceof Array) {
         var str = "";
         for (var ix = 0; ix < value.length; ++ix)
-            str += this.convertValue(value[ix]);
+            str += this.convertValue(value[ix], obj, args);
         return str;
     } else if (typeof(value) == "function") {
         this.functions.push(value);
-        var obj = this.controller ? this.instance + ".controller" : "";
-        return (this.instance + ".functions[" + (this.functions.length - 1) + "].call(" + obj + ");");
+        var obj = obj || (this.controller ? this.instance + ".controller" : "");
+        return (this.instance + ".functions[" + (this.functions.length - 1) + "].call(" + obj + (args ? ',' + args.join(',') : "") + ");");
     } else
         return value;
 }
@@ -1155,13 +1155,14 @@ Bindster.prototype.getBindAction = function(tags, value)
     "if(!isValidating && node){self.controller.onchange(node.bindster.tags.bind," + this_value +")};" : "")
     var model_trigger = (tags.trigger ? (tags.trigger + "; ") : "");
     var trigger = model_trigger + controller_trigger;
+    var asyncvalidate = tags.asyncvalidate ? this.convertValue(tags.asyncvalidate, this.getBindObjectReference(tags.bind), [this_value]).replace(/;$/,'') : null;
 
     // Bind to a temporary variable, perform validation and handle exceptions
     // where updated value is stored temporarily and error is recorded ready for error bind
     var x =    "try { " +
         "var self=this;" +
         "var isValidating=this.validate;" +
-        "var bind_error_obj = " + this.getBindErrorReferenceParts(tags.bind).obj + ";" +
+         "var bind_error_obj = " + this.getBindErrorReferenceParts(tags.bind).obj + ";" +
         "var bind_error_prop = '" + this.getBindErrorReferenceParts(tags.bind).prop + "';" +
         "var bindTags = '" + tags.bind + "';" +
         "if(target && target.bindster){target.bindster.bind = undefined}" +
@@ -1172,14 +1173,11 @@ Bindster.prototype.getBindAction = function(tags, value)
         (tags.validate ? (tags.validate + "; ") : "") +
         this_previous_value + " = " + tags.bind  + ";" +
         "if (" + bind_error +") {delete " + bind_error + "} " +
-        ((typeof(Q) != 'undefined' && tags.bind.match(/[a-zA-z]$/) && !tags.bind.match(/[^A-Za-z0-9_\(\)\.\[\]]/)) ?
-        "if (typeof(" + tags.bind + "Set) == 'function'){" +
-        bind_error + " = '__pending__';" + controller_trigger + tags.bind + "Set(" + this_value + ").then(" + "" +
-        "function() {(function(){if(bind_error_obj && bind_error_obj[bind_error_prop]){delete bind_error_obj[bind_error_prop]};" +
-        model_trigger + "}).call(self)}," +
-        "function(e){(function(){c.bindster.raiseError(bindTags, e);bind_error_obj[bind_error_prop] = e}).call(self)})" +
-        "}else{" +
-        tags.bind + " = " + this_value + ';' + trigger + "};"
+        ((typeof(Q) != 'undefined' && asyncvalidate) ?
+            bind_error + " = '__pending__';" + controller_trigger + asyncvalidate + ".then(" + "" +
+            "function() {(function(){if(bind_error_obj && bind_error_obj[bind_error_prop]){delete bind_error_obj[bind_error_prop]};" +
+            (tags.bind + " = " + this_value + ";") + model_trigger + "}).call(self)}," +
+            "function(e){(function(){c.bindster.raiseError(bindTags, e);bind_error_obj[bind_error_prop] = e}).call(self)})"
             : (tags.bind + " = " + this_value + ";") + trigger) +
         " } catch (e) {if(!e.constructor.toString().match(/Error/)){c.bindster.raiseError(bindTags, e);" +
         bind_error + " = e} else {c.bindster.displayError(null, e, 'validation, parse or format', node)}; " +
@@ -1539,9 +1537,9 @@ Bindster.prototype.getTags = function (node, mapAttrs, finger_print)
 
                 for (attr in pattrs)
                     if (attr.match(/validate|format|parse|rule|type|values|descriptions/))
-                        attrs[attr.match(/type/) ? 'proptype' : attr] =
+                        attrs[attr.match(/type/) ? 'proptype' : attr.match(/validate/) ? 'asyncvalidate' : attr] =
                             (attr == 'rule' || attr == 'type') ? pattrs[attr] :
-                              (attr.match(/values|descriptions/)? pattrs[attr] : this.convertValue(pattrs[attr]));
+                              (attr.match(/values|descriptions|validate/) ? pattrs[attr] : this.convertValue(pattrs[attr]));
 
                 // Add to the fingerprint to allow selectors to match
                 finger_print += ("=" + (attrValue.match(/(.*?)\.([^.]+)$/) ? RegExp.$2 : attrValue) + ";");
@@ -1629,6 +1627,7 @@ Bindster.prototype.getTags = function (node, mapAttrs, finger_print)
             case "evalbinderror":
             case "binderrordata":
             case "validate":
+            case "asyncvalidate":
             case "evalvalidate":
             case "trigger":
             case "evaltrigger":

@@ -1,30 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:b="http://bindster.com/bindster.dtd" lang="en">
 <script src="../index.js"></script>
+<script src="../node_modules/supertype/index.js"></script>
 <style>
     body {font-family:  Arial, Helvetica, sans-serif;}
     p {margin-bottom: 0px}
 </style>
 <script>
-    controller = {
-        val1: "S",
-        val2: "S",
-        val3: "S",
-        val4: "S",
-        val5: 'not set',
-        val6: true,
-        karen: "Karen",
-        // This hack emulates properties in supertype
-        __prop__:function(prop) {
-            switch(prop) {
-                case 'val1': return {type: String, values: {"S":"Sam", "K":"Karen"}};
-                case 'val2': return {type: String, values: function () {return {"S":"Sam", "K":this.karen}}};
-                case 'val3': return {type: String, values: ["S", "K"], descriptions: {"S":"Sam", "K":"Karen"}};
-                case 'val4': return {type: String, values: function () {return ["S", "K"]}, descriptions: function () {return {"S":"Sam", "K":this.karen}}};
-                case 'val6': return {type: Boolean, values: {"true": 'Yes', "false":'No'}};
-            }
-        },
-    }
+    var Controller = ObjectTemplate.create("Controller", {
+        val1: {type: String, values: {"S":"Sam", "K":"Karen"}, value: "S"},
+        val2: {type: String, values: function () {return {"S":"Sam", "K":this.karen}}, value: "S"},
+        val3: {type: String, values: ["S", "K"], descriptions: {"S":"Sam", "K":"Karen"}, value: "S"},
+        val4: {type: String, values: function () {return ["S", "K"]}, descriptions: function () {return {"S":"Sam", "K":this.karen}}, value: "S"},
+        val5: {type: String, value: 'not set'},
+        val6: {type: Boolean, values: {"true": 'Yes', "false":'No'}, value: true},
+        karen: {type: String, value: "Karen"},
+    })
+    var controller = new Controller();
 </script>
 <head>
     <meta charset="UTF-8">
