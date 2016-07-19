@@ -1155,7 +1155,7 @@ Bindster.prototype.getBindAction = function(tags, value)
     "if(!isValidating && node){self.controller.onchange(node.bindster.tags.bind," + this_value +")};" : "")
     var model_trigger = (tags.trigger ? (tags.trigger + "; ") : "");
     var trigger = model_trigger + controller_trigger;
-    var asyncvalidate = tags.asyncvalidate ? this.convertValue(tags.asyncvalidate, this.getBindObjectReference(tags.bind), [this_value]).replace(/;$/,'') : null;
+    var asyncvalidate = tags.asyncvalidate ? this.convertValue(tags.asyncvalidate, this.getBindObjectReference(tags.bind), [this_value]) : null;
 
     // Bind to a temporary variable, perform validation and handle exceptions
     // where updated value is stored temporarily and error is recorded ready for error bind
@@ -1174,16 +1174,24 @@ Bindster.prototype.getBindAction = function(tags, value)
         this_previous_value + " = " + tags.bind  + ";" +
         "if (" + bind_error +") {delete " + bind_error + "} " +
         ((typeof(Q) != 'undefined' && asyncvalidate) ?
-            bind_error + " = '__pending__';" + controller_trigger + asyncvalidate + ".then(" + "" +
+            bind_error + " = '__pending__';" + controller_trigger +
+            'var bind_vresult = ' + asyncvalidate + "self.syncwrap(bind_vresult," +
             "function() {(function(){if(bind_error_obj && bind_error_obj[bind_error_prop]){delete bind_error_obj[bind_error_prop]};" +
             (tags.bind + " = " + this_value + ";") + model_trigger + "}).call(self)}," +
-            "function(e){(function(){c.bindster.raiseError(bindTags, e);bind_error_obj[bind_error_prop] = e}).call(self)})"
+            "function(e){(function(){c.bindster.raiseError(bindTags, e);bind_error_obj[bind_error_prop] = e;c.bindster.scheduleRender()}).call(self)})"
             : (tags.bind + " = " + this_value + ";") + trigger) +
         " } catch (e) {if(!e.constructor.toString().match(/Error/)){c.bindster.raiseError(bindTags, e);" +
         bind_error + " = e} else {c.bindster.displayError(null, e, 'validation, parse or format', node)}; " +
         "}";
     return x;
 }
+Bindster.prototype.syncwrap = function (val, good, bad) {
+    if (val && val.then)
+        return val.then(good, bad);
+    else
+        return good(val)
+}
+
 Bindster.prototype.raiseError = function (bind, error) {
     this.hasErrors = true;
     console.log("Error on " + bind + ":" + (error && error.message ? error.message : ""));

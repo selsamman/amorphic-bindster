@@ -8,18 +8,11 @@
     p {margin-bottom: 0px}
 </style>
 <script>
-    var SomeObj = ObjectTemplate.create("SomeObj", {
-            valx: {type: String, value: 'x'}
-    });
     var Controller = ObjectTemplate.create("Controller", {
+        get foo() {return 'foo'},
         val1: {type: String, validate: validate1, value: ''},
-        val2: {type: String, validate: validate2, value: ''},
-
-        valx: {type: SomeObj},
-        init: function () {
-            this.valx = new SomeObj();
-        }
-    });
+        val2: {type: String, validate: validate2, value: ''}
+    })
     var controller = new Controller();
     function validate1(val) {
         if ((val.length + this.val2.length) > 10)
@@ -37,8 +30,7 @@
     <title>Title</title>
 </head>
 <body>
-<span b:bind="(valx.valx)"></span>
-<h2>Two fields must be equal</h2>
+<span  b:bind="foo"></span>
 <input type="text" b:bind="val1" /><br />
 <span b:binderror="val1"></span>
 <br /><br />
