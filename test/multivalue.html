@@ -8,7 +8,7 @@
 </style>
 <script>
     var Controller = ObjectTemplate.create("Controller", {
-        val1: {type: String, values: {"S":"Sam", "K":"Karen"}, value: "S"},
+        val1: {type: String, values: {"S":"Sam", "K":"Karen"}, value: null},
         val2: {type: String, values: function () {return {"S":"Sam", "K":this.karen}}, value: "S"},
         val3: {type: String, values: ["S", "K"], descriptions: {"S":"Sam", "K":"Karen"}, value: "S"},
         val4: {type: String, values: function () {return ["S", "K"]}, descriptions: function () {return {"S":"Sam", "K":this.karen}}, value: "S"},
