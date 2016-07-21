@@ -10,6 +10,11 @@
 <script>
     var Controller = ObjectTemplate.create("Controller", {
         get foo() {return 'foo'},
+        please: {type: String, value: 'init', get: function(v) {return v.match(/please/) ? v : v + ' please'}},
+        prettyPlease: {type: String, value: 'init',
+            get: function(v) {return v.match(/please/) ? v : v + ' please'},
+            set: function(v) {return v.match(/pretty/) ? v : v + ' pretty'}
+        },
         val1: {type: String, validate: validate1, value: ''},
         val2: {type: String, validate: validate2, value: ''}
     })
@@ -30,7 +35,9 @@
     <title>Title</title>
 </head>
 <body>
-<span  b:bind="foo"></span>
+foo: <span  b:bind="foo"></span>
+init please: <span  b:bind="please"></span>
+init pretty please: <span  b:bind="prettyPlease"></span>
 <input type="text" b:bind="val1" /><br />
 <span b:binderror="val1"></span>
 <br /><br />
