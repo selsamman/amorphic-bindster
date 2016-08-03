@@ -1,3 +1,6 @@
+## 1.3.0
+* Asynchronous validation
+* Remove support for xxxGet and xxxSet
 ## 1.1.0
 * Added handling for value/descriptions in types plumbing through to selects
 * Added the ability to iterate on scalar with values property in which case it iterates the values

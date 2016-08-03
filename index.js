@@ -173,7 +173,7 @@ Bindster.prototype.setController = function(controller)
     controller.bindGet = function(bind)
     {
         var tags = this.getTags(bind);
-        var bind_data = this.bindster.eval(this.bindster.getPropOrGetter(tags.bind), null, "bind");
+        var bind_data = this.bindster.eval(this.bindster.resolveValue(tags.bind), null, "bind");
         if (typeof(bind_data) == 'undefined')
             this.bindster.throwError(null, 'bind', tags.bind + ' returned undefined');
         if (tags.format)
@@ -477,7 +477,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                 if (iterateon && !iterating_entity && !skip)
                 {
                     do_render = false;
-                    var fill_data = this.get(this.getPropOrGetter(iterateon));
+                    var fill_data = this.get(this.resolveValue(iterateon));
                     if (!(fill_data instanceof Array) && tags.fill) {
                         fill_data = this.getValueIterator(node, tags);
                         iterateon += '__values__';
@@ -595,8 +595,8 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                 // Process various tags
                                 if (tags.fill)
                                 {
-                                    var fill_data = this.eval(this.getPropOrGetter(tags.fill, tags.bind, node), null, "fill", node);
-                                    var fill_using = this.eval(this.getPropOrGetter(tags.using, tags.bind, node), null, "using", node);
+                                    var fill_data = this.eval(this.resolveValue(tags.fill, tags.bind, node), null, "fill", node);
+                                    var fill_using = this.eval(this.resolveValue(tags.using, tags.bind, node), null, "using", node);
                                     if (!fill_data)
                                         this.throwError(node, 'fill', 'cannot get data to fill' + tags.fill);
                                     else
@@ -651,7 +651,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                     }
                                     processed_tags = true;
                                 }
-                                var bind_data = this.eval(this.getPropOrGetter(tags.bind), null, "bind", node);
+                                var bind_data = this.eval(this.resolveValue(tags.bind), null, "bind", node);
                                 if (typeof(bind_data) == 'undefined')
                                     this.throwError(node, 'bind', tags.bind + ' returned undefined', node);
                                 if (tags.format)
@@ -919,12 +919,8 @@ Bindster.prototype.resolveRadioValue = function (target, value)
     }
     return value;
 }
-Bindster.prototype.getPropOrGetter = function (bind_ref, bind, node) {
-    /* It would be nice to be able to substitute a getter but this would require some heavy duty processing
-     *  this feature should probably come out or be done as a true getter */
-    if (typeof(bind_ref) == 'string' && bind_ref.match(/[A-Za-z0-9_]$/) && !bind_ref.match(/[^A-Za-z0-9_\(\)\.\[\]]/))
-        return "(typeof(" + bind_ref + "Get) == 'function' ? (" + bind_ref + "Get()) : (" + bind_ref + "))";
-    else if (bind && this.getBindObjectReference(bind) && typeof(bind_ref) == 'function')
+Bindster.prototype.resolveValue = function (bind_ref, bind, node) {
+    if (bind && this.getBindObjectReference(bind) && typeof(bind_ref) == 'function')
         return bind_ref.call(this.eval(this.getBindObjectReference(bind), null, "binderror", node));
     else
         return bind_ref
@@ -946,8 +942,8 @@ Bindster.prototype.setAttr = function (selector, attr, value)
     });
 }
 Bindster.prototype.getValueIterator = function (node, tags) {
-    var fill_data = this.eval(this.getPropOrGetter(tags.fill, tags.iterateon, node), null, "fill", node);
-    var fill_using = this.eval(this.getPropOrGetter(tags.using, tags.iterateon, node), null, "using", node);
+    var fill_data = this.eval(this.resolveValue(tags.fill, tags.iterateon, node), null, "fill", node);
+    var fill_using = this.eval(this.resolveValue(tags.using, tags.iterateon, node), null, "using", node);
     if (!fill_data)
         this.throwError(node, 'fill', 'cannot get data to fill' + tags.fill);
     var kv = this.getSelectKeyValues(fill_data, fill_using, tags);
