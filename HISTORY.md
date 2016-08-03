@@ -5,6 +5,8 @@
 * Added handling for value/descriptions in types plumbing through to selects
 * Added the ability to iterate on scalar with values property in which case it iterates the values
 * Added call-out to material_select to deal with materialize selects
+## 1.0.3
+* Make 1.0.2 work with IE
 ## 1.0.2
 * PR for sort order
 * fixed problem with not putting events on empty iterates
