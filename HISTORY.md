@@ -1,3 +1,6 @@
+## 1.3.1
+* Fixed broken event handler
+* Added support for b:pleaseselect to have {} JS expression
 ## 1.3.0
 * Asynchronous validation
 * Remove support for xxxGet and xxxSet

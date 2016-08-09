@@ -758,7 +758,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                             this.setFocus(tags, node);
                             if (!bind_error && (node.bindster.forceRefresh ? true : last_value !== bind_data)) {
                                 child = node.firstChild;
-                                var pleaseSelect = tags.pleaseselect ? tags.pleaseselect : "Select ...";
+                                var pleaseSelect = tags.pleaseselect ? this.evalJSTag(tags.pleaseselect) : "Select ...";
                                 while (child) {
                                     if (child.value == (bind_data + "") ||
                                         bind_data && bind_data.__id__ && child.value == bind_data.__id__) { // convert booleans & objs
@@ -1172,7 +1172,7 @@ Bindster.prototype.getBindAction = function(tags, value)
         "if (" + bind_error +") {delete " + bind_error + "} " +
         ((typeof(Q) != 'undefined' && asyncvalidate) ?
             bind_error + " = '__pending__';" + controller_trigger +
-            'var bind_vresult = ' + asyncvalidate + "self.syncwrap(bind_vresult," +
+            'var bind_vresult = ' + asyncvalidate + ";self.syncwrap(bind_vresult," +
             "function() {(function(){if(bind_error_obj && bind_error_obj[bind_error_prop]){delete bind_error_obj[bind_error_prop]};" +
             (tags.bind + " = " + this_value + ";") + model_trigger + "}).call(self)}," +
             "function(e){(function(){c.bindster.raiseError(bindTags, e);bind_error_obj[bind_error_prop] = e;c.bindster.scheduleRender()}).call(self)})"
@@ -1832,6 +1832,13 @@ Bindster.prototype.getOnPaint = function(element, expression)
     //return {depends: depends, action: 'target.' + element + ' = "' + expression + '";', tag: element};
     return {depends: depends, action: 'if(typeof(' + test +') != "undefined"){target.' + element + ' = "' + expression + '"};', tag: element};
 
+}
+Bindster.prototype.evalJSTag = function(tag, node)
+{
+    tag = tag.replace(/{([^}]*)}/g, function (all, js) {
+        return this.eval(js, null, 'error evaluating {}', node);
+    }.bind(this));
+    return tag;
 }
 Bindster.prototype.getText = function(node)
 {
