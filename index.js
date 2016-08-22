@@ -501,7 +501,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                             var new_context = (tags.iterateindex || tags.iteratewith) ?
                             context + (
                                 (tags.iteratewith ? this.instance + ".set('" + tags.iteratewith + "', \""
-                                    /*+ this.instance + ".data."*/ + iterateon + "[" + ix + "]\");" :  "")
+                                /*+ this.instance + ".data."*/ + iterateon + "[" + ix + "]\");" :  "")
                                 + (tags.iterateindex ? this.instance + ".set('" + tags.iterateindex + "', " + ix + ");" : "")
                                 + (tags.iterateloopindex ? this.instance + ".set('" + tags.iterateloopindex + "', " + loopIndex + ");" : "")
                                 + (tags.iteratecounter ? this.instance + ".set('" + tags.iteratecounter + "', " + counter + ");" : "")
@@ -640,11 +640,11 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                                 }
                                             if (materialize && typeof($) == 'function') {
                                                 (function () {
-                                                  var select = $(node);
-                                                  select = select ? select[0] : null;
-                                                  select = select ? $(select) : null;
-                                                  if (select && typeof(select.material_select) == 'function')
-                                                    setTimeout(function (){select.material_select()}, 0);
+                                                    var select = $(node);
+                                                    select = select ? select[0] : null;
+                                                    select = select ? $(select) : null;
+                                                    if (select && typeof(select.material_select) == 'function')
+                                                        setTimeout(function (){select.material_select()}, 0);
                                                 })()
                                             }
                                         }
@@ -973,13 +973,13 @@ Bindster.prototype.getSelectKeyValues = function (fill_data, fill_using, tags) {
 
     for (var ix = 0; ix < fill_data.length; ++ix) {
         var key = tags.fillkey ?
-          this.eval(tags.fillkey, {index: ix, value: fill_data[ix]}, "fillkey", node)
-          : fill_data[ix];
+            this.eval(tags.fillkey, {index: ix, value: fill_data[ix]}, "fillkey", node)
+            : fill_data[ix];
         if (key != null) {
             var value = fill_using ? fill_using[key] : fill_data[ix];
             value = tags.fillvalue ?
-              this.eval(tags.fillvalue, {key: key, value: value, index: ix}, "fillvalue", node)
-              : value;
+                this.eval(tags.fillvalue, {key: key, value: value, index: ix}, "fillvalue", node)
+                : value;
             if (value != null) {
                 keys.push(key);
                 values[key] = value;
@@ -1080,10 +1080,10 @@ Bindster.prototype.getBindErrorData = function(node, bind_data, xtra_bind_data)
     if (temp_bind_data.message || temp_bind_data.code) {
         if (this.messages[bind_data.code || bind_data.message]) {
             expression = (this.messages[bind_data.code || bind_data.message] || (bind_data.code || bind_data.message))
-              .replace(/{(.*?)}/g, function (all, js) {
-                js = "(" + js + ")";
-                return '" + ' + js + ' + "';
-            });
+                .replace(/{(.*?)}/g, function (all, js) {
+                    js = "(" + js + ")";
+                    return '" + ' + js + ' + "';
+                });
             bind_data = this.eval('"' + expression + '"', temp_bind_data, "binderror", node);
         } else
             bind_data = bind_data.text || bind_data.message;
@@ -1159,7 +1159,7 @@ Bindster.prototype.getBindAction = function(tags, value)
     var x =    "try { " +
         "var self=this;" +
         "var isValidating=this.validate;" +
-         "var bind_error_obj = " + this.getBindErrorReferenceParts(tags.bind).obj + ";" +
+        "var bind_error_obj = " + this.getBindErrorReferenceParts(tags.bind).obj + ";" +
         "var bind_error_prop = '" + this.getBindErrorReferenceParts(tags.bind).prop + "';" +
         "var bindTags = '" + tags.bind + "';" +
         "if(target && target.bindster){target.bindster.bind = undefined}" +
@@ -1167,16 +1167,17 @@ Bindster.prototype.getBindAction = function(tags, value)
         ((typeof(bindsterTestFrameworkSet) == "function") ?
         "if(!isValidating && node){bindsterTestFrameworkSet(node.bindster.tags.bind," + this_value +")};" : "") +
         (tags.parse ? (this_value + " = " + tags.parse + "; ") : "") +
+        "var return_value = " + value + ";" +
         (tags.validate ? (tags.validate + "; ") : "") +
         this_previous_value + " = " + tags.bind  + ";" +
         "if (" + bind_error +") {delete " + bind_error + "} " +
         ((typeof(Q) != 'undefined' && asyncvalidate) ?
-            bind_error + " = '__pending__';" + controller_trigger +
-            'var bind_vresult = ' + asyncvalidate + ";self.syncwrap(bind_vresult," +
-            "function() {(function(){if(bind_error_obj && bind_error_obj[bind_error_prop]){delete bind_error_obj[bind_error_prop]};" +
-            (tags.bind + " = " + this_value + ";") + model_trigger + "}).call(self)}," +
-            "function(e){(function(){c.bindster.raiseError(bindTags, e);bind_error_obj[bind_error_prop] = e;c.bindster.scheduleRender()}).call(self)})"
-            : (tags.bind + " = " + this_value + ";") + trigger) +
+        bind_error + " = '__pending__';" + controller_trigger +
+        'var bind_vresult = ' + asyncvalidate + ";self.syncwrap(bind_vresult," +
+        "function() {(function(){if(bind_error_obj && bind_error_obj[bind_error_prop]){delete bind_error_obj[bind_error_prop]};" +
+        (tags.bind + " = return_value;") + model_trigger + "}).call(self)}," +
+        "function(e){(function(){c.bindster.raiseError(bindTags, e);bind_error_obj[bind_error_prop] = e;c.bindster.scheduleRender()}).call(self)})"
+            : (tags.bind + " = return_value;") + trigger) +
         " } catch (e) {if(!e.constructor.toString().match(/Error/)){c.bindster.raiseError(bindTags, e);" +
         bind_error + " = e} else {c.bindster.displayError(null, e, 'validation, parse or format', node)}; " +
         "}";
@@ -1403,23 +1404,27 @@ Bindster.prototype.checkLocation = function(force)
 }
 Bindster.prototype.getPropAttrs = function (node, bindRef)
 {
-    if (!bindRef || bindRef.match(/[^0-9a-zA-Z_$.\[\]()]/))
+    try {
+        if (!bindRef || bindRef.match(/[^0-9a-zA-Z_$.\[\]()]/))
+            return {}
+        if (bindRef.match(/(.*?)\.([^.]+)$/)) {
+            var obj = RegExp.$1;
+            var prop = RegExp.$2;
+        } else {
+            var obj = "this.data";
+            var prop = bindRef;
+        }
+        var tref = this.eval(obj + "['__props__']", null, "bind", node, null, true);
+        var pref = this.eval(obj + "['__prop__']", null, "bind", node, null, true);
+        if (typeof(pref) == 'function') {
+            return this.eval(obj + "['__prop__']('" + prop + "')", null, "bind", node, null, true);
+        } else if (typeof(tref) == 'function')
+            return this.eval(obj + "['__props__'](" + obj + ")", null, "bind", node, null, true)[prop];
+        else
+            return {};
+    } catch (e) {
         return {}
-    if (bindRef.match(/(.*?)\.([^.]+)$/)) {
-        var obj = RegExp.$1;
-        var prop = RegExp.$2;
-    } else {
-        var obj = "this.data";
-        var prop = bindRef;
     }
-    var tref = this.eval(obj + "['__props__']", null, "bind", node);
-    var pref = this.eval(obj + "['__prop__']", null, "bind", node);
-    if (typeof(pref) == 'function') {
-        return this.eval(obj + "['__prop__']('" + prop + "')", null, "bind", node);
-    } else if (typeof(tref) == 'function')
-        return this.eval(obj + "['__props__'](" + obj + ")", null, "bind", node)[prop];
-    else
-        return {};
 }
 
 Bindster.prototype.processRules = function(node, name, attrs)
@@ -1544,7 +1549,7 @@ Bindster.prototype.getTags = function (node, mapAttrs, finger_print)
                     if (attr.match(/validate|format|parse|rule|type|values|descriptions/))
                         attrs[attr.match(/type/) ? 'proptype' : attr.match(/validate/) ? 'asyncvalidate' : attr] =
                             (attr == 'rule' || attr == 'type') ? pattrs[attr] :
-                              (attr.match(/values|descriptions|validate/) ? pattrs[attr] : this.convertValue(pattrs[attr]));
+                                (attr.match(/values|descriptions|validate/) ? pattrs[attr] : this.convertValue(pattrs[attr]));
 
                 // Add to the fingerprint to allow selectors to match
                 finger_print += ("=" + (attrValue.match(/(.*?)\.([^.]+)$/) ? RegExp.$2 : attrValue) + ";");
@@ -1857,7 +1862,7 @@ Bindster.prototype.evalWithValue = function(js, value, error_message, node, ev)
     return this.eval(js, {value: value}, error_message, node, ev);
 
 }
-Bindster.prototype.eval = function(__js__, data, error_message, node, ev)
+Bindster.prototype.eval = function(__js__, data, error_message, node, ev, rethrow)
 {
     var srcElement = node;
     var target = node;
@@ -1871,6 +1876,8 @@ Bindster.prototype.eval = function(__js__, data, error_message, node, ev)
         else
             with (this.data) {return eval (__js__); }
     } catch(e) {
+        if (rethrow)
+            throw e;
         this.displayError(__js__, e, error_message, node);
         return "";
     }

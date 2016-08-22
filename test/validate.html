@@ -28,7 +28,7 @@
     function validate2(val) {
         return Q.delay(1000).then(function () {
             if ((val.length + this.val1.length) > 10)
-                throw {message: "Too long"};
+                throw {message: "Too long!"};
         }.bind(this));
     }
 </script>

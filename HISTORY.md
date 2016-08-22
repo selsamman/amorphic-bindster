@@ -1,3 +1,6 @@
+## 1.3.2
+* Made property lookup not throw errors
+* Made value setting not dependent on controller in event handling
 ## 1.3.1
 * Fixed broken event handler
 * Added support for b:pleaseselect to have {} JS expression
