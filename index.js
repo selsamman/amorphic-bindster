@@ -601,7 +601,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                         this.throwError(node, 'fill', 'cannot get data to fill' + tags.fill);
                                     else
                                     {
-                                        var kv = this.getSelectKeyValues(fill_data, fill_using, tags);
+                                        var kv = this.getSelectKeyValues(fill_data, fill_using, tags, node);
                                         var keys = kv.keys;
                                         var values = kv.values;
                                         var materialize = false;
@@ -946,7 +946,7 @@ Bindster.prototype.getValueIterator = function (node, tags) {
     var fill_using = this.eval(this.resolveValue(tags.using, tags.iterateon, node), null, "using", node);
     if (!fill_data)
         this.throwError(node, 'fill', 'cannot get data to fill' + tags.fill);
-    var kv = this.getSelectKeyValues(fill_data, fill_using, tags);
+    var kv = this.getSelectKeyValues(fill_data, fill_using, tags, node);
     var keys = kv.keys;
     var values = kv.values;
     var iterator = [];
@@ -954,7 +954,7 @@ Bindster.prototype.getValueIterator = function (node, tags) {
         iterator.push({value: keys[ix], description: values[keys[ix]]});
     return iterator;
 }
-Bindster.prototype.getSelectKeyValues = function (fill_data, fill_using, tags) {
+Bindster.prototype.getSelectKeyValues = function (fill_data, fill_using, tags, node) {
 
     // If an associative array (hash) create fill and using
     var do_sort = false;

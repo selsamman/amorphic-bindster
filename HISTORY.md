@@ -1,3 +1,5 @@
+## 1.3.4
+* Prevent node is not defined error
 ## 1.3.3
 * Prevent __xxx__ props from being suppressed outside of mappers
 ## 1.3.2
