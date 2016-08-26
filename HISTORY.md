@@ -1,3 +1,5 @@
+## 1.3.5
+* Parse results were not being fed into trigger
 ## 1.3.4
 * Prevent node is not defined error
 ## 1.3.3

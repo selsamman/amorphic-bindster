@@ -1167,10 +1167,10 @@ Bindster.prototype.getBindAction = function(tags, value)
         ((typeof(bindsterTestFrameworkSet) == "function") ?
         "if(!isValidating && node){bindsterTestFrameworkSet(node.bindster.tags.bind," + this_value +")};" : "") +
         (tags.parse ? (this_value + " = " + tags.parse + "; ") : "") +
-        "var return_value = " + value + ";" +
         (tags.validate ? (tags.validate + "; ") : "") +
         this_previous_value + " = " + tags.bind  + ";" +
         "if (" + bind_error +") {delete " + bind_error + "} " +
+        "var return_value = " + this_value + ";" +  // Need value within this closure
         ((typeof(Q) != 'undefined' && asyncvalidate) ?
         bind_error + " = '__pending__';" + controller_trigger +
         'var bind_vresult = ' + asyncvalidate + ";self.syncwrap(bind_vresult," +

@@ -14,7 +14,14 @@
     var Controller = ObjectTemplate.create("Controller", {
         val1: {type: String, validate: validate1, value: ''},
         val2: {type: String, validate: validate2, value: ''},
-
+        val3: {type: String, value: ''},
+        appendV: function ()  {
+            this.val3 = this.val3 + 'v';
+        },
+        lessThan10: function () {
+            if (this.value.length > 10)
+                throw {message: "Too long"};
+        },
         valx: {type: SomeObj},
         init: function () {
             this.valx = new SomeObj();
@@ -38,12 +45,16 @@
 </head>
 <body>
 <span b:bind="valx.valx"></span>
-<h2>Max length 10</h2>
+<h2>Max length 10 -- Data Model</h2>
 <input type="text" b:bind="val1" /><br />
 <span b:binderror="val1"></span>
 <br /><br />
 <input type="text" b:bind="val2" /><br />
 <span b:binderror="val2"></span>
+<h2>Max length 10 -- Inline</h2>
+<input type="text" b:bind="val3" b:validate="lessThan10()" b:trigger="appendV()"/><br />
+<span b:binderror="val3"></span>
+<span b:bind="val3"></span>
 </body>
 <script>
     bindster = new Bindster(controller, null, controller, null, true);
