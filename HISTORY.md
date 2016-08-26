@@ -1,3 +1,5 @@
+## 1.3.3
+* Prevent __xxx__ props from being suppressed outside of mappers
 ## 1.3.2
 * Made property lookup not throw errors
 * Made value setting not dependent on controller in event handling
