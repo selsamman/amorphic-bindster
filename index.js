@@ -1520,7 +1520,7 @@ Bindster.prototype.getTags = function (node, mapAttrs, finger_print)
         }
 
         // Process only attributes that are ours and that they don't have unresolved mapper attributes
-        if((our_tag.length > 0 || this.isOurAttr(attrName)) && (!mapper || !attrValue.match(/__[^_]+__/)))
+        if((our_tag.length > 0 || this.isOurAttr(attrName)) && (!mapAttrs || !attrValue.match(/__[^_]+__/)))
         {
 
             // clean up an normalize by removing data-, pre-pending our tag name and stripping -

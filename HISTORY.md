@@ -1,3 +1,5 @@
+## 1.3.6
+* Prevent __xxx__ props from being suppressed outside of mappers (revised)
 ## 1.3.5
 * Parse results were not being fed into trigger
 ## 1.3.4
