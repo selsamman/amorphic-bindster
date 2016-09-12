@@ -619,12 +619,18 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                                 var value = values[key];
                                                 if (value != lastValue) {
                                                     var child = child ? child : node.appendChild(document.createElement('OPTION'));
-                                                    child.value = key;
-                                                    child.text = value;
+                                                    if (child.value != key) {
+                                                        child.value = key;
+                                                        materialize = true;
+                                                        node.bindster.forceRefresh = true;
+                                                    }
+                                                    if (child.text != value) {
+                                                        child.text = value;
+                                                        materialize = true;
+                                                        node.bindster.forceRefresh = true;
+                                                    }
                                                     child = child.nextSibling;
                                                     lastValue = value;
-                                                    node.bindster.forceRefresh = true;
-                                                    materialize = true;
                                                 }
                                             }
                                             // Kill extra options
@@ -645,6 +651,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                                     select = select ? $(select) : null;
                                                     if (select && typeof(select.material_select) == 'function')
                                                         setTimeout(function (){select.material_select()}, 0);
+                                                    console.log("Calling Material Select");
                                                 })()
                                             }
                                         }

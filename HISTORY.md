@@ -1,3 +1,5 @@
+## 1.3.7
+* Don't update selects when they have not changed
 ## 1.3.6
 * Prevent __xxx__ props from being suppressed outside of mappers (revised)
 ## 1.3.5
