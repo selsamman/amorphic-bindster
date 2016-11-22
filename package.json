@@ -7,7 +7,16 @@
       "q": "1.x"
   },
   "devDependencies": {
-    "supertype": "1.3.*"
+    "chai": "3.x",
+    "istanbul": "0.4.5",
+    "mocha": "^3.1.2",
+    "supertype": "file:../supertype",
+    "sinon": "^1.17.6"
+  },
+  "scripts": {
+    "test": "istanbul cover _mocha -- test/* -R spec",
+    "test:config": "mocha test/config",
+    "test:example": "mocha test/example"
   },
   "directories": {},
   "main": "./index.js",
