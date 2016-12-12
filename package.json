@@ -11,7 +11,7 @@
     "eslint": "3.7.x",
     "istanbul": "0.4.5",
     "mocha": "^3.1.2",
-    "supertype": "file:../supertype",
+    "supertype": "git://github.com/nikmash/supertype.git",
     "sinon": "^1.17.6"
   },
   "scripts": {
