@@ -1,1 +1,1 @@
-export {Bindable} from 'bindable.ts';
+export {Bindable} from './bindable';
