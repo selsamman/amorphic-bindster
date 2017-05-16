@@ -30,6 +30,7 @@ export function Bindable<BC extends Constructable<{}>>(Base: BC) {
         bindsterArrive (route : any) : void {};
 
         // Legacy
+        value : any;
         clearErrors(data?) : void {};
         isError (propRef : any) : boolean {return false};
         hasErrors (data) : boolean {return false};
