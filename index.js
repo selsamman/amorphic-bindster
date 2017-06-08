@@ -175,7 +175,7 @@ Bindster.prototype.setController = function(controller)
         var tags = this.getTags(bind);
         var bind_data = this.bindster.eval(this.bindster.resolveValue(tags.bind), null, "bind");
         if (typeof(bind_data) == 'undefined')
-            this.bindster.throwError(null, 'bind', tags.bind + ' returned undefined');
+            bind_data = null;
         if (tags.format)
             bind_data = this.bindster.evalWithValue(tags.format, bind_data, 'format');
         return bind_data;
@@ -683,7 +683,7 @@ Bindster.prototype.render = function (node, context, parent_fingerprint, wrapped
                                 }
                                 var bind_data = this.eval(this.resolveValue(tags.bind), null, "bind", node);
                                 if (typeof(bind_data) == 'undefined')
-                                    this.throwError(node, 'bind', tags.bind + ' returned undefined', node);
+                                    bind_data = null;
                                 if (tags.format)
                                     bind_data = this.evalWithValue(tags.format, bind_data, 'format', node);
                             } else
