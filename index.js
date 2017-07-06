@@ -1330,7 +1330,7 @@ Bindster.prototype.processEvents = function(node, tags, context, cloned, finger_
         // For mouseover/mouseout we eliminate redundant fires
         var get_node = (event_name == 'onmouseover' || event_name == 'onmouseout') ?
         "var node = " + this.instance + ".processMouse(ev,'" + declared_id + "');" :
-            "var node = ev.target ? ev.target : ev.srcElement; ";
+            "var node = ev.target || ev.srcElement; ";
 
         var set_focus = (event_name == 'onclick' || event_name == 'onenter') ? this.instance + ".set_focus = true;" : "";
 
@@ -1338,7 +1338,7 @@ Bindster.prototype.processEvents = function(node, tags, context, cloned, finger_
 
         // IE does not like return false in on change events
         var do_return = (event_name == 'onclick' && node.tagName == 'A' && node.href && node.href.match(/#/) > 1) ? 'true' : 'false';
-        var do_return ="return (ev && ev.srcElement && ev.srcElement.tagName && ev.srcElement.tagName == 'INPUT' ? true : " + do_return + ");";
+        var do_return ="return (ev && (ev.target && ev.target.tagName == 'INPUT' || ev.srcElement && ev.srcElement.tagName == 'INPUT') ? true : " + do_return + ");";
 
         var payload = context + action + set_focus + schedule_render;
         if (event_name == "onenter") {
@@ -1366,7 +1366,7 @@ Bindster.prototype.processEvents = function(node, tags, context, cloned, finger_
 Bindster.prototype.processMouse = function(ev, declared_id)
 {
     // Determine node that declared event
-    var target = ev.target ? ev.target : ev.srcElement;
+    var target = ev.target || ev.srcElement;
     if (!target.bindster)
         return false;
     var original_id = target.bindster.id;
@@ -2447,13 +2447,13 @@ BindsterControllerInterface.prototype.createEvent = function(node, event_name, o
     var declared_id = node.bindster.id;
     var get_node = (true || event_name == 'mouseover' || event_name == 'mouseout') ?
     "var node = " + this.bindster.instance + ".processMouse(ev,'" + declared_id + "');" :
-        "var node = ev.target ? ev.target : ev.srcElement; ";
+        "var node = ev.target || ev.srcElement; ";
 
     var schedule_render = render ? this.bindster.instance + ".scheduleRender(" + render + ");" : "";
 
     // IE does not like return false in on change events
     var do_return = (event_name == 'onclick' && node.tagName == 'A' && node.href && node.href.match(/#/) > 1) ? 'true' : 'false';
-    var do_return ="return (ev && ev.srcElement && ev.srcElement.tagName && ev.srcElement.tagName == 'INPUT' ? true : " + do_return + ");";
+    var do_return ="return (ev && (ev.target && ev.target.tagName == 'INPUT' || ev.srcElement && ev.srcElement.tagName == 'INPUT') ? true : " + do_return + ");";
 
     var function_body = get_node + "if (node) { " + action + schedule_render + " }" + do_return;
     function_body = "try{" + function_body + "}catch(e){" + this.bindster.instance + '.throwError(node, "' + event_name + '",e.message)}';

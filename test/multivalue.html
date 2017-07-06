@@ -73,6 +73,9 @@
 <p>type: boolean, values: {"true": 'Yes', "false":'No'}</p>
 <input b:bind="val6" type="checkbox" b:truevalue="true" b:falsevalue="false" b:onclick="setVal5();"><br />
 
+<p>Checkbox not bound to anything but with a b:onclick handler</p>
+<input type="checkbox" b:onclick="node;"><br />
+
 <h2>And some edits too</h2>
 <input b:bind="val1" /><br />
 <input b:bind="val2" /><br />
